@@ -9,6 +9,7 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
+	// set router's not found and method not allowed errors to our custom errors
 	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.notFoundResponse(w, r)
 	})
@@ -20,5 +21,5 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, "/v1/movies", app.createMovieHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", app.ShowMovieHandler)
 
-	return router
+	return app.recoverPanic(router)
 }
