@@ -29,6 +29,9 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any, h
 	// append a new line at the end of json for terminal apps
 	js = append(js, '\n')
 
+
+	// maps.Insert(w.Header(), maps.All(headers))
+
 	for key, value := range headers {
 		w.Header()[key] = value
 	}
