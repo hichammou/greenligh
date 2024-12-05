@@ -17,7 +17,7 @@ func New() *Validator {
 
 // Valide returns true if the errors map doesn't contain any fields
 func (v *Validator) Valide() bool {
-	return len(v.Errors) > 0
+	return len(v.Errors) == 0
 }
 
 // AddError adds an error to the map. if the key is present in the errors map. then AddError will take no effect
