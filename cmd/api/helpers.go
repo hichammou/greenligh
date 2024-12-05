@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -46,9 +47,18 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	return nil
 }
 
-func (app *application) readJSON(r *http.Request, dst any) error {
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	// Use http.MaxBytesReader() to limit the size of the request body to 1MB
+	maxBytes := 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
-	err := json.NewDecoder(r.Body).Decode(dst)
+	dec := json.NewDecoder(r.Body)
+
+	// DisallowUnknownFields() tels the decoder to return an error if JSON in the request body contains any fields that can not be mapped to target destination
+	dec.DisallowUnknownFields()
+
+	err := dec.Decode(dst)
+
 	if err != nil {
 		var (
 			syntaxError            *json.SyntaxError
@@ -72,6 +82,15 @@ func (app *application) readJSON(r *http.Request, dst any) error {
 		case errors.Is(err, io.EOF):
 			return errors.New("body must not be empty")
 
+		// We check if the decoder found a field that can not be mapped to dst, then extract the field name from the error
+		case strings.HasPrefix(err.Error(), "json: unknown field "):
+			fieldName := strings.TrimPrefix(err.Error(), "json: unknown field ")
+			return fmt.Errorf("body contains unknown key %s", fieldName)
+
+		// Check if the request exceeds 1MB
+		case err.Error() == "http: request body too large":
+			return fmt.Errorf("body must not be larger that %d bytes", maxBytes)
+
 		case errors.As(err, &invalidUnmarshaldError):
 			panic(err)
 
@@ -79,5 +98,12 @@ func (app *application) readJSON(r *http.Request, dst any) error {
 			return err
 		}
 	}
+
+	// Here we called Decode() again to check if the request body contains only a single JSON value. if not we return an error
+	err = dec.Decode(&struct{})
+	if err != io.EOF {
+		return errors.New("body must contain only one single JSON value")
+	}
+
 	return nil
 }
