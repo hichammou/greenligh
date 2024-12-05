@@ -11,14 +11,14 @@ import (
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	// Declare a new anonymos struct to hold the information that we expect to be in the HTTP request body
 	var input struct {
-		Title   string   `json:"title"`
-		Year    int32    `json:"year"`
-		Runtime int32    `json:"runtime"`
-		Genres  []string `json:"genres"`
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genres  []string     `json:"genres"`
 	}
 
 	//Initialize a new json.Decoder instance which reads from the request body and then use Decode() to decode the body contents into input struct
-	err := app.readJSON(r, &input)
+	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
