@@ -46,9 +46,9 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data envelo
 	return nil
 }
 
-func (app *application) readJSON(r *http.Request, target any) error {
+func (app *application) readJSON(r *http.Request, dst any) error {
 
-	err := json.NewDecoder(r.Body).Decode(target)
+	err := json.NewDecoder(r.Body).Decode(dst)
 	if err != nil {
 		var (
 			syntaxError            *json.SyntaxError
@@ -76,11 +76,8 @@ func (app *application) readJSON(r *http.Request, target any) error {
 			panic(err)
 
 		default:
-			return nil
-
+			return err
 		}
-
 	}
-
 	return nil
 }
