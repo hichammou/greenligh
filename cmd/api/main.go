@@ -90,6 +90,20 @@ func openDB(cfg config) (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Set maximum number of open (in-use + idle) connections in the pool. value <= 0 means no limit
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+
+	// set maximum number of idle connections in the pool. value <= 0 means no limit
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+
+	// Idle timeout is how much the idle connections will stay before go marks theme as expired and removed by background cleanup
+	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxIdleTime(duration)
+
 	// Create a context with a 5 second timeout decline
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
