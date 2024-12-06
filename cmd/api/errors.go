@@ -6,12 +6,7 @@ import (
 )
 
 func (app *application) logError(r *http.Request, err error) {
-	var (
-		method = r.Method
-		uri    = r.URL.RequestURI()
-	)
-
-	app.logger.Error(err.Error(), "method", method, "uri", uri)
+	app.logger.Print(err)
 }
 
 func (app *application) faildValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
