@@ -9,6 +9,10 @@ import (
 	"greenlight.hichammou/internal/validator"
 )
 
+func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	// Declare a new anonymos struct to hold the information that we expect to be in the HTTP request body
 	var input struct {
