@@ -7,7 +7,8 @@ import (
 
 // Define a custom ErrRecordNotFound err.
 var (
-	ErrRecordNotFound = errors.New("")
+	ErrRecordNotFound = errors.New("record not found")
+	ErrEditConflict   = errors.New("edit conflict")
 )
 
 type Models struct {

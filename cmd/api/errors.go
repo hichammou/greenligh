@@ -44,6 +44,12 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 	app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
 
+// Edit conflict response
+func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Request) {
+	message := "unable to update the record due to an edit conflict, please try again"
+	app.errorResponse(w, r, http.StatusConflict, message)
+}
+
 // The notFoundResponse() method will be used to send a 404 Not Found status code and
 // JSON response to the client.
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
