@@ -74,10 +74,10 @@ func (app *application) updateMovieHanler(w http.ResponseWriter, r *http.Request
 	}
 
 	var inputs struct {
-		Title   string       `json:"title"`
-		Year    int32        `json:"year"`
-		Runtime data.Runtime `json:"runtime"`
-		Genres  []string     `json:"genres"`
+		Title   *string       `json:"title"`
+		Year    *int32        `json:"year"`
+		Runtime *data.Runtime `json:"runtime"`
+		Genres  []string      `json:"genres"`
 	}
 
 	err = app.readJSON(w, r, &inputs)
@@ -86,10 +86,19 @@ func (app *application) updateMovieHanler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	movie.Title = inputs.Title
-	movie.Year = inputs.Year
-	movie.Runtime = inputs.Runtime
-	movie.Genres = inputs.Genres
+	// zero value of pointers is nil, so we can you that to do partial updates
+	if inputs.Title != nil {
+		movie.Title = *inputs.Title
+	}
+	if inputs.Year != nil {
+		movie.Year = *inputs.Year
+	}
+	if inputs.Runtime != nil {
+		movie.Runtime = *inputs.Runtime
+	}
+	if inputs.Genres != nil {
+		movie.Genres = inputs.Genres
+	}
 
 	v := validator.New()
 
