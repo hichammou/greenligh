@@ -63,17 +63,24 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 
 func (m MovieModel) Update(movie *Movie) error {
 	query := `UPDATE movies 
-						SET title = $1, year = $2, runtime = $3, genres = $4
+						SET title = $1, year = $2, runtime = $3, genres = $4, version = version + 1
 						WHERE id = $5
-						RETURNING version
-	`
+						RETURNING version`
 
 	args := []interface{}{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres), movie.ID}
 
 	return m.DB.QueryRow(query, args...).Scan(&movie.Version)
 }
 
-func (m MovieModel) Delete(id int64) error { return nil }
+func (m MovieModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `DELETE FROM movies WHERE id = $1`
+	_, err := m.DB.Exec(query, id)
+	return err
+}
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
 	v.Check(movie.Title != "", "title", "must be provided")
