@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"greenlight.hichammou/internal/data"
+	"greenlight.hichammou/internal/jsonlog"
 )
 
 const version = "1.0.0"
@@ -29,7 +30,7 @@ type config struct {
 
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
