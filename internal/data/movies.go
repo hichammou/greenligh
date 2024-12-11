@@ -39,20 +39,24 @@ func (m MovieModel) Insert(movie *Movie) error {
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
-func (m MovieModel) List() ([]Movie, error) {
-	query := `SELECT id, created_at, title, year, runtime, genres, version FROM movies`
+func (m MovieModel) List(title string, genres []string, filters Filters) ([]*Movie, error) {
+	query := `SELECT id, created_at, title, year, runtime, genres, version 
+						FROM movies
+						WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+						AND (genres @> $2 OR $2 = '{}')
+						ORDER BY id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	movies := make([]Movie, 0)
+	movies := make([]*Movie, 0)
 
 	for rows.Next() {
 		var movie Movie
@@ -69,7 +73,7 @@ func (m MovieModel) List() ([]Movie, error) {
 		if err != nil {
 			return nil, err
 		}
-		movies = append(movies, movie)
+		movies = append(movies, &movie)
 	}
 
 	if rows.Err() != nil {
