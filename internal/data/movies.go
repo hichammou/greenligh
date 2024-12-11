@@ -40,29 +40,32 @@ func (m MovieModel) Insert(movie *Movie) error {
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
-func (m MovieModel) List(title string, genres []string, filters Filters) ([]*Movie, error) {
-	query := fmt.Sprintf(`SELECT id, created_at, title, year, runtime, genres, version 
+func (m MovieModel) List(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
+	query := fmt.Sprintf(`SELECT COUNT(*) OVER(), id, created_at, title, year, runtime, genres, version 
 						FROM movies
 						WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '') -- add full test search. the @@ symbol in pg is 'matches'  
 						AND (genres @> $2 OR $2 = '{}')
-						ORDER BY %s %s ,id ASC`, filters.sortColumn(), filters.sortDirection())
+						ORDER BY %s %s ,id ASC
+						LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
+	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres), filters.limit(), filters.offset())
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	defer rows.Close()
 
+	totalRecords := 0
 	movies := make([]*Movie, 0)
 
 	for rows.Next() {
 		var movie Movie
 
 		err = rows.Scan(
+			&totalRecords,
 			&movie.ID,
 			&movie.CreatedAt,
 			&movie.Title,
@@ -72,15 +75,15 @@ func (m MovieModel) List(title string, genres []string, filters Filters) ([]*Mov
 			&movie.Version,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		movies = append(movies, &movie)
 	}
 
 	if rows.Err() != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
-	return movies, nil
+	return movies, calculateMetadata(totalRecords, filters.Page, filters.PageSize), nil
 }
 
 func (m MovieModel) Get(id int64) (*Movie, error) {
