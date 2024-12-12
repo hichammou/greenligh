@@ -16,6 +16,11 @@ func (app *application) faildValidationResponse(w http.ResponseWriter, r *http.R
 	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
 
+func (app *application) rateLimitExccededResponse(w http.ResponseWriter, r *http.Request) {
+	message := "rate limit exceeded."
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
+}
+
 // The errorResponse() method is a generic helper for sending JSON-formatted error
 // messages to the client with a given status code. Note that we're using the any
 // type for the message parameter, rather than just a string type, as this gives us
