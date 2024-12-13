@@ -52,8 +52,20 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	app.logger.PrintInfo("email", map[string]string{"email": user.Email})
+
+	// Use the background helper to execute an anonymous function that sends the welcome email
+	app.background(func() {
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
+		if err != nil {
+			app.logger.PrintError(err, nil)
+			return
+		}
+
+	})
+
 	success := "your registration completed successfully"
-	err = app.writeJSON(w, http.StatusCreated, envelope{"message": success, "user": user}, nil)
+	err = app.writeJSON(w, http.StatusAccepted, envelope{"message": success, "user": user}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

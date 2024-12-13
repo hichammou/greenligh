@@ -127,7 +127,7 @@ func (app *application) readString(qs url.Values, key string, defaultValue strin
 // The readCSV() helper reads a string value from the query string and then splits it
 // into a slice on the comma character. If no matching key could be found, it returns
 // the provided default value.
-func (app *application) rzeadCSV(qs url.Values, key string, defaultValue []string) []string {
+func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
 	// Extract the value from the query string.
 	csv := qs.Get(key)
 
