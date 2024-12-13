@@ -127,7 +127,7 @@ func (app *application) readString(qs url.Values, key string, defaultValue strin
 // The readCSV() helper reads a string value from the query string and then splits it
 // into a slice on the comma character. If no matching key could be found, it returns
 // the provided default value.
-func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+func (app *application) rzeadCSV(qs url.Values, key string, defaultValue []string) []string {
 	// Extract the value from the query string.
 	csv := qs.Get(key)
 
@@ -159,4 +159,20 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 	}
 	// Otherwise, return the converted integer value.
 	return i
+}
+
+// The background() helper accepts an arbitrary function as a parameter.
+func (app *application) background(fn func()) {
+	// Lunch a background goroutine
+	go func() {
+		// Recover any panic
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.PrintError(fmt.Errorf("%s", err), nil)
+			}
+		}()
+
+		// Execute the arbitrary function.
+		fn()
+	}()
 }
