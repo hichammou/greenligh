@@ -34,7 +34,7 @@ type password struct {
 }
 
 func (m UserModel) Insert(user *User) error {
-	query := `INSERT INTO (name, email, password_hash, activated)
+	query := `INSERT INTO users (name, email, password_hash, activated)
 						VALUES ($1, $2, $3, $4)
 						RETURNING id, created_at, version`
 
@@ -156,7 +156,7 @@ func ValidateEmail(v *validator.Validator, email string) {
 
 func ValidatePasswordPlainText(v *validator.Validator, password string) {
 	v.Check(password != "", "password", "must be provided")
-	v.Check(len(password) >= 9, "password", "must be at least 8 bytes long")
+	v.Check(len(password) >= 8, "password", "must be at least 8 bytes long")
 	v.Check(len(password) <= 500, "password", "must be at most 500 bytes long")
 }
 
