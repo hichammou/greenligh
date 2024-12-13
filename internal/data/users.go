@@ -53,5 +53,29 @@ func (p *password) Matches(plaintextPassword string) (bool, error) {
 
 // Validation rules
 func ValidateEmail(v *validator.Validator, email string) {
-	v.Che
+	v.Check(email != "", "email", "must be provided")
+	v.Check(validator.Matches(email, *validator.EmailRX), "email", "must be a valid email address")
+}
+
+func ValidatePasswordPlainText(v *validator.Validator, password string) {
+	v.Check(password != "", "password", "must be provided")
+	v.Check(len(password) >= 9, "password", "must be at least 8 bytes long")
+	v.Check(len(password) <= 500, "password", "must be at most 500 bytes long")
+}
+
+func ValidateUser(v *validator.Validator, user *User) {
+	v.Check(user.Name != "", "name", "must be provided")
+	v.Check(len(user.Name) <= 500, "name", "must be less that 500 bytes long")
+
+	ValidateEmail(v, user.Email)
+
+	if user.Password.plaintext != nil {
+		// Dereference the user password plaintext
+		ValidatePasswordPlainText(v, *user.Password.plaintext)
+	}
+
+	// User hashed password should never be nil
+	if user.Password.hash == nil {
+		panic("missing password hash for user")
+	}
 }
