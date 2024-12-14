@@ -9,7 +9,7 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
-	// set router's not found and method not allowed errors to our custom errors
+	// Set router's not found and method not allowed errors to our custom errors
 	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.notFoundResponse(w, r)
 	})
