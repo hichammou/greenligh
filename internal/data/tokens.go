@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	"encoding/base32"
 	"time"
+
+	"greenlight.hichammou/internal/validator"
 )
 
 // Define a constant for the token scope.
@@ -24,6 +26,11 @@ type Token struct {
 
 type TokenModel struct {
 	DB *sql.DB
+}
+
+func ValidateTokenPlaintext(v *validator.Validator, tokenPlaintext string) {
+	v.Check(tokenPlaintext != "", "token", "must be provided")
+	v.Check(len(tokenPlaintext) == 26, "token", "must be 26 bytes long")
 }
 
 func (m TokenModel) New(userID int64, ttl time.Duration, scope string) (*Token, error) {
@@ -57,7 +64,7 @@ func (m TokenModel) DeleteAllForUser(scope string, userId int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := m.DB.ExecContext(ctx, query, scope, userId)
+	_, err := m.DB.ExecContext(ctx, query, userId, scope)
 	return err
 }
 
