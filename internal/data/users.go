@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"time"
@@ -31,6 +32,47 @@ type UserModel struct {
 type password struct {
 	plaintext *string
 	hash      []byte
+}
+
+func (m UserModel) GetForToken(tokenScope, tokenPlaintext string) (*User, error) {
+	// Calculate the SHA-256 hash of the plaintext
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+
+	query := `SELECT users.id, users.created_at, users.email, users.name, users.password_hash, users.activated, users.version
+						FROM users
+						INNER JOIN tokens t
+						ON users.id = t.user_id
+						WHERE t.hash = $1
+						AND t.scope = $2
+						AND t.expiry > $3`
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Email,
+		&user.Name,
+		&user.Password.hash,
+		&user.Activated,
+		&user.Version,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }
 
 func (m UserModel) Insert(user *User) error {
