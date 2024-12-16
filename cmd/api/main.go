@@ -57,7 +57,7 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	// parse the dsn
-	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://greenlight:1234@localhost:5433/greenlight?sslmode=disable", "Data source name")
+	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://greenlight:1234@localhost/greenlight?sslmode=disable", "Data source name")
 
 	// Read the connection pool settings from command-line flags into the config struct.
 	// Notice the default values that we're using?
