@@ -113,7 +113,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		headerParts := strings.Split(authorizationHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
-			app.InvalidAuthenticationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -122,7 +122,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		v := validator.New()
 
 		if data.ValidateTokenPlaintext(v, token); !v.Valide() {
-			app.InvalidAuthenticationTokenResponse(w, r)
+			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
@@ -130,7 +130,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
-				app.InvalidAuthenticationTokenResponse(w, r)
+				app.invalidAuthenticationTokenResponse(w, r)
 			default:
 				app.serverErrorResponse(w, r, err)
 			}
@@ -138,6 +138,23 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		r = app.contextSetUser(r, user)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+
+		if !user.Activated {
+			app.inactiveAccountResponse(w, r)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})
