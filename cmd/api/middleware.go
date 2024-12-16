@@ -122,7 +122,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		v := validator.New()
 
 		if data.ValidateTokenPlaintext(v, token); !v.Valide() {
-			v.InvalidAuthenticationTokenResponse(w, r)
+			app.InvalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
