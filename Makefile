@@ -1,9 +1,20 @@
+# ==================================================================================== #
+# HELPERS
+# ==================================================================================== #
+
 ## help: prints help for targets with comments
+.PHONY: help
 help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'
+
+.PHONY: confirm
 confirm:
 	@echo -n 'Are you sure? [y/N]: ' && read ans && [ $${ans:-N} == y ]
+
+# ==================================================================================== #
+# DEVELOPMENT
+# ==================================================================================== #
 
 ## api/run: run the cmd/api application
 api/run:
@@ -22,3 +33,23 @@ db/migrations/new:
 db/migrations/up: confirm
 	@echo 'Running up migrations ...'
 	migrate -path ./migrations -database postgres://greenlight:1234@localhost/greenlight?sslmode=disable up
+
+# ==================================================================================== #
+# QUALITY CONTROL
+# ==================================================================================== #
+
+## audit: tidy dependecies and format, vet and test all code
+.PHONY: audit
+audit:
+	@echo 'Tidying and verifying module dependecies...'
+	go mod tidy
+	go mod verify
+	
+	# @echo 'Formatting code...' Disable format for now
+	# go fmt ./...
+	
+	@echo 'Vetting code...'
+	go vet ./...
+	staticcheck ./...
+	@echo 'Running tests...'
+	go test -race -vet=off ./...
