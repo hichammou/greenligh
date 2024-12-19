@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/felixge/httpsnoop"
 	"golang.org/x/time/rate"
 	"greenlight.hichammou/internal/data"
 	"greenlight.hichammou/internal/validator"
@@ -20,18 +22,21 @@ func (app *application) metrics(next http.Handler) http.Handler {
 	totalRequestsReceived := expvar.NewInt("total_requests_received")
 	totalResponsesSent := expvar.NewInt("total_responses_sent")
 	totalProcessingTimeMicroSecond := expvar.NewInt("total_processing_time_μs")
+	totalResponsesSentByStatus := expvar.NewMap("total_responses_sent_by_status")
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
 		totalRequestsReceived.Add(1)
+
+		metrics := httpsnoop.CaptureMetrics(next, w, r)
 
 		next.ServeHTTP(w, r)
 
 		totalResponsesSent.Add(1)
 
-		duration := time.Since(start).Microseconds()
-		totalProcessingTimeMicroSecond.Add(duration)
+		totalProcessingTimeMicroSecond.Add(metrics.Duration.Microseconds())
+
+		// Increment the value of a given status by 1
+		totalResponsesSentByStatus.Add(strconv.Itoa(metrics.Code), 1)
 	})
 }
 
