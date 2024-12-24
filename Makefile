@@ -18,7 +18,7 @@ confirm:
 
 ## api/run: run the cmd/api application
 api/run:
-	go run ./cmd/api -db-dsn=postgres://greenlight:1234@localhost:5433/greenlight?sslmode=disable
+	go run ./cmd/api -db-dsn=postgres://greenlight:1234@localhost/greenlight?sslmode=disable
 
 ## db/psql: connect to the databas using psql
 db/psql:
